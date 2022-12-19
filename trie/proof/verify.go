@@ -20,7 +20,7 @@ var (
 // a proof trie based on the encoded proof nodes given. The order of proofs is ignored.
 // A nil error is returned on success.
 func Verify(encodedProofNodes [][]byte, rootHash, key, value []byte) (err error) {
-	proofTrie, err := buildTrie(encodedProofNodes, rootHash)
+	proofTrie, err := BuildTrie(encodedProofNodes, rootHash)
 	if err != nil {
 		return fmt.Errorf("building trie from proof encoded nodes: %w", err)
 	}
@@ -45,8 +45,8 @@ var (
 	ErrRootNodeNotFound = errors.New("root node not found in proof")
 )
 
-// buildTrie sets a partial trie based on the proof slice of encoded nodes.
-func buildTrie(encodedProofNodes [][]byte, rootHash []byte) (t *trie.Trie, err error) {
+// BuildTrie sets a partial trie based on the proof slice of encoded nodes.
+func BuildTrie(encodedProofNodes [][]byte, rootHash []byte) (t *trie.Trie, err error) {
 	if len(encodedProofNodes) == 0 {
 		return nil, fmt.Errorf("%w: for Merkle root hash 0x%x",
 			ErrEmptyProof, rootHash)
@@ -108,7 +108,7 @@ func buildTrie(encodedProofNodes [][]byte, rootHash []byte) (t *trie.Trie, err e
 			ErrRootNodeNotFound, rootHash, strings.Join(proofHashDigests, ", "))
 	}
 
-	err = loadProof(digestToEncoding, root)
+	err = LoadProof(digestToEncoding, root)
 	if err != nil {
 		return nil, fmt.Errorf("loading proof: %w", err)
 	}
@@ -116,9 +116,9 @@ func buildTrie(encodedProofNodes [][]byte, rootHash []byte) (t *trie.Trie, err e
 	return trie.NewTrie(root), nil
 }
 
-// loadProof is a recursive function that will create all the trie paths based
+// LoadProof is a recursive function that will create all the trie paths based
 // on the map from node hash digest to node encoding, starting from the node `n`.
-func loadProof(digestToEncoding map[string][]byte, n *node.Node) (err error) {
+func LoadProof(digestToEncoding map[string][]byte, n *node.Node) (err error) {
 	if n.Kind() != node.Branch {
 		return nil
 	}
@@ -164,7 +164,7 @@ func loadProof(digestToEncoding map[string][]byte, n *node.Node) (err error) {
 
 		branch.Children[i] = child
 		branch.Descendants += child.Descendants
-		err = loadProof(digestToEncoding, child)
+		err = LoadProof(digestToEncoding, child)
 		if err != nil {
 			return err // do not wrap error since this is recursive
 		}

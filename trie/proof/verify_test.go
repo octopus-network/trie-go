@@ -1,4 +1,3 @@
-
 package proof
 
 import (
@@ -290,7 +289,7 @@ func Test_buildTrie(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			trie, err := buildTrie(testCase.encodedProofNodes, testCase.rootHash)
+			trie, err := BuildTrie(testCase.encodedProofNodes, testCase.rootHash)
 
 			assert.ErrorIs(t, err, testCase.errWrapped)
 			if testCase.errWrapped != nil {
@@ -353,7 +352,7 @@ func Test_buildTrie2(t *testing.T) {
 		bytes1, bytes2, bytes3,
 	}
 
-	trie, err := buildTrie(proof, root)
+	trie, err := BuildTrie(proof, root)
 	// t.Log("TRIE:", trie)
 	require.NoError(t, err)
 
@@ -425,7 +424,7 @@ func Test_buildTrie3(t *testing.T) {
 		bytes1, bytes2, bytes3,
 	}
 
-	trie, err := buildTrie(proof, root)
+	trie, err := BuildTrie(proof, root)
 	// t.Log("TRIE:", trie)
 	require.NoError(t, err)
 
@@ -509,7 +508,7 @@ func Test_buildTrie4(t *testing.T) {
 		bytes1, bytes2, bytes3, bytes4, bytes5,
 	}
 
-	trie1, err := buildTrie(proof, root)
+	trie1, err := BuildTrie(proof, root)
 	// t.Log("TRIE:", trie)
 	require.NoError(t, err)
 
@@ -600,7 +599,7 @@ func Test_buildTrie5(t *testing.T) {
 		bytes1, bytes2,
 	}
 
-	trie, err := buildTrie(proof, root)
+	trie, err := BuildTrie(proof, root)
 	// t.Log("TRIE:", trie)
 	require.NoError(t, err)
 
@@ -894,7 +893,7 @@ func Test_loadProof(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err := loadProof(testCase.merkleValueToEncoding, testCase.node)
+			err := LoadProof(testCase.merkleValueToEncoding, testCase.node)
 
 			assert.ErrorIs(t, err, testCase.errWrapped)
 			if testCase.errWrapped != nil {
