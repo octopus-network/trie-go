@@ -92,9 +92,9 @@ func (n *Node) Copy(settings CopySettings) *Node {
 	}
 
 	if settings.CopyCached {
-		if n.MerkleValue != nil {
-			cpy.MerkleValue = make([]byte, len(n.MerkleValue))
-			copy(cpy.MerkleValue, n.MerkleValue)
+		if n.NodeValue != nil {
+			cpy.NodeValue = make([]byte, len(n.NodeValue))
+			copy(cpy.NodeValue, n.NodeValue)
 		}
 	}
 

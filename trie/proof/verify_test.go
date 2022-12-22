@@ -9,7 +9,7 @@ import (
 
 	"github.com/ChainSafe/chaindb"
 	"github.com/ChainSafe/gossamer/pkg/scale"
-	"github.com/octopus-network/trie-go/substrate/node"
+	node "github.com/octopus-network/trie-go/substrate"
 	"github.com/octopus-network/trie-go/trie"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -655,7 +655,7 @@ func Test_loadProof(t *testing.T) {
 				Descendants:  1,
 				Dirty:        true,
 				Children: padRightChildren([]*node.Node{
-					{MerkleValue: []byte{3}},
+					{NodeValue: []byte{3}},
 				}),
 			},
 			merkleValueToEncoding: map[string][]byte{},
@@ -672,7 +672,7 @@ func Test_loadProof(t *testing.T) {
 				Descendants:  1,
 				Dirty:        true,
 				Children: padRightChildren([]*node.Node{
-					{MerkleValue: []byte{2}},
+					{NodeValue: []byte{2}},
 				}),
 			},
 			merkleValueToEncoding: map[string][]byte{
@@ -702,8 +702,8 @@ func Test_loadProof(t *testing.T) {
 				Descendants:  2,
 				Dirty:        true,
 				Children: padRightChildren([]*node.Node{
-					{MerkleValue: []byte{2}}, // found
-					{MerkleValue: []byte{3}}, // not found
+					{NodeValue: []byte{2}}, // found
+					{NodeValue: []byte{3}}, // not found
 				}),
 			},
 			merkleValueToEncoding: map[string][]byte{
@@ -733,7 +733,7 @@ func Test_loadProof(t *testing.T) {
 				Descendants:  2,
 				Dirty:        true,
 				Children: padRightChildren([]*node.Node{
-					{MerkleValue: []byte{2}},
+					{NodeValue: []byte{2}},
 				}),
 			},
 			merkleValueToEncoding: map[string][]byte{
@@ -774,7 +774,7 @@ func Test_loadProof(t *testing.T) {
 				Descendants:  1,
 				Dirty:        true,
 				Children: padRightChildren([]*node.Node{
-					{MerkleValue: []byte{2}},
+					{NodeValue: []byte{2}},
 				}),
 			},
 			merkleValueToEncoding: map[string][]byte{
@@ -786,7 +786,7 @@ func Test_loadProof(t *testing.T) {
 				Descendants:  1,
 				Dirty:        true,
 				Children: padRightChildren([]*node.Node{
-					{MerkleValue: []byte{2}},
+					{NodeValue: []byte{2}},
 				}),
 			},
 			errWrapped: node.ErrVariantUnknown,
@@ -801,7 +801,7 @@ func Test_loadProof(t *testing.T) {
 				Descendants:  1,
 				Dirty:        true,
 				Children: padRightChildren([]*node.Node{
-					{MerkleValue: []byte{2}},
+					{NodeValue: []byte{2}},
 				}),
 			},
 			merkleValueToEncoding: map[string][]byte{
@@ -846,7 +846,7 @@ func Test_loadProof(t *testing.T) {
 				Descendants:  1,
 				Dirty:        true,
 				Children: padRightChildren([]*node.Node{
-					{MerkleValue: []byte{2}},
+					{NodeValue: []byte{2}},
 				}),
 			},
 			merkleValueToEncoding: map[string][]byte{
@@ -874,7 +874,7 @@ func Test_loadProof(t *testing.T) {
 						Dirty:        true,
 						Children: padRightChildren([]*node.Node{
 							{
-								MerkleValue: blake2bNode(t, leafLarge),
+								NodeValue: blake2bNode(t, leafLarge),
 							},
 						}),
 					},

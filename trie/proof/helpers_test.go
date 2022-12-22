@@ -1,4 +1,3 @@
-
 package proof
 
 import (
@@ -6,9 +5,9 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/octopus-network/trie-go/substrate/node"
 	"github.com/ChainSafe/gossamer/lib/common"
 	"github.com/ChainSafe/gossamer/pkg/scale"
+	node "github.com/octopus-network/trie-go/substrate"
 	"github.com/stretchr/testify/require"
 )
 

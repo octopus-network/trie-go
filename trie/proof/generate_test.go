@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/octopus-network/trie-go/substrate/node"
+	node "github.com/octopus-network/trie-go/substrate"
 	"github.com/octopus-network/trie-go/trie"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

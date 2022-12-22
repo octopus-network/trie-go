@@ -1,5 +1,3 @@
-
-
 package node
 
 import (
@@ -181,7 +179,7 @@ func Test_decodeBranch(t *testing.T) {
 					nil, nil, nil, nil, nil,
 					nil, nil, nil, nil, nil,
 					{
-						MerkleValue: childHash,
+						NodeValue: childHash,
 					},
 				}),
 				Descendants: 1,
@@ -216,7 +214,7 @@ func Test_decodeBranch(t *testing.T) {
 					nil, nil, nil, nil, nil,
 					nil, nil, nil, nil, nil,
 					{
-						MerkleValue: childHash,
+						NodeValue: childHash,
 					},
 				}),
 				Descendants: 1,

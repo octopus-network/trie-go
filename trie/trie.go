@@ -1,15 +1,11 @@
-// Copyright 2021 ChainSafe Systems (ON)
-// SPDX-License-Identifier: LGPL-3.0-only
-
 package trie
 
 import (
 	"bytes"
 	"fmt"
 
-	// "github.com/octopus-network/trie-go/substrate/codec"
-	"github.com/octopus-network/trie-go/substrate/node"
 	"github.com/ChainSafe/gossamer/lib/common"
+	node "github.com/octopus-network/trie-go/substrate"
 )
 
 // EmptyHash is the empty trie hash.
@@ -118,7 +114,7 @@ func updateGeneration(currentNode *Node, trieGeneration uint64,
 
 	// The hash of the node from a previous snapshotted trie
 	// is usually already computed.
-	deletedMerkleValue := currentNode.MerkleValue
+	deletedMerkleValue := currentNode.NodeValue
 	if len(deletedMerkleValue) > 0 {
 		deletedMerkleValueString := string(deletedMerkleValue)
 		deletedMerkleValues[deletedMerkleValueString] = struct{}{}
@@ -209,7 +205,6 @@ func (t *Trie) String() string {
 
 	return t.root.String()
 }
-
 
 func entries(parent *Node, prefix []byte, kv map[string][]byte) map[string][]byte {
 	if parent == nil {

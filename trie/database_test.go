@@ -1,6 +1,3 @@
-// Copyright 2021 ChainSafe Systems (ON)
-// SPDX-License-Identifier: LGPL-3.0-only
-
 package trie
 
 import (
@@ -177,11 +174,11 @@ func Test_PopulateNodeHashes(t *testing.T) {
 			nodeHashes: map[string]struct{}{},
 		},
 		"inlined leaf node": {
-			node:       &Node{MerkleValue: []byte("a")},
+			node:       &Node{NodeValue: []byte("a")},
 			nodeHashes: map[string]struct{}{},
 		},
 		"leaf node": {
-			node: &Node{MerkleValue: []byte(merkleValue32Zeroes)},
+			node: &Node{NodeValue: []byte(merkleValue32Zeroes)},
 			nodeHashes: map[string]struct{}{
 				merkleValue32Zeroes: {},
 			},
@@ -192,18 +189,18 @@ func Test_PopulateNodeHashes(t *testing.T) {
 		},
 		"inlined branch node": {
 			node: &Node{
-				MerkleValue: []byte("a"),
+				NodeValue: []byte("a"),
 				Children: padRightChildren([]*Node{
-					{MerkleValue: []byte("b")},
+					{NodeValue: []byte("b")},
 				}),
 			},
 			nodeHashes: map[string]struct{}{},
 		},
 		"branch node": {
 			node: &Node{
-				MerkleValue: []byte(merkleValue32Zeroes),
+				NodeValue: []byte(merkleValue32Zeroes),
 				Children: padRightChildren([]*Node{
-					{MerkleValue: []byte(merkleValue32Ones)},
+					{NodeValue: []byte(merkleValue32Ones)},
 				}),
 			},
 			nodeHashes: map[string]struct{}{
@@ -213,13 +210,13 @@ func Test_PopulateNodeHashes(t *testing.T) {
 		},
 		"nested branch node": {
 			node: &Node{
-				MerkleValue: []byte(merkleValue32Zeroes),
+				NodeValue: []byte(merkleValue32Zeroes),
 				Children: padRightChildren([]*Node{
-					{MerkleValue: []byte(merkleValue32Ones)},
+					{NodeValue: []byte(merkleValue32Ones)},
 					{
-						MerkleValue: []byte(merkleValue32Twos),
+						NodeValue: []byte(merkleValue32Twos),
 						Children: padRightChildren([]*Node{
-							{MerkleValue: []byte(merkleValue32Threes)},
+							{NodeValue: []byte(merkleValue32Threes)},
 						}),
 					},
 				}),

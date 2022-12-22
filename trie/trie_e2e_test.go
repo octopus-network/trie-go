@@ -1,6 +1,3 @@
-// Copyright 2021 ChainSafe Systems (ON)
-// SPDX-License-Identifier: LGPL-3.0-only
-
 package trie
 
 import (
@@ -12,11 +9,11 @@ import (
 	"testing"
 
 	"github.com/ChainSafe/chaindb"
+	node "github.com/octopus-network/trie-go/substrate"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ChainSafe/gossamer/lib/common"
-	"github.com/octopus-network/trie-go/substrate/node"
 )
 
 const (
@@ -326,7 +323,7 @@ func TestTrieDiff(t *testing.T) {
 	}
 
 	dbTrie := NewEmptyTrie()
-	err = dbTrie.Load(storageDB, common.BytesToHash(newTrie.root.MerkleValue))
+	err = dbTrie.Load(storageDB, common.BytesToHash(newTrie.root.NodeValue))
 	require.NoError(t, err)
 }
 

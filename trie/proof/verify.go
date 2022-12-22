@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/ChainSafe/gossamer/lib/common"
-	"github.com/octopus-network/trie-go/substrate/node"
+	node "github.com/octopus-network/trie-go/substrate"
 	"github.com/octopus-network/trie-go/trie"
 )
 
@@ -129,7 +129,7 @@ func LoadProof(digestToEncoding map[string][]byte, n *node.Node) (err error) {
 			continue
 		}
 
-		merkleValue := child.MerkleValue
+		merkleValue := child.NodeValue
 		encoding, ok := digestToEncoding[string(merkleValue)]
 		if !ok {
 			inlinedChild := len(child.StorageValue) > 0 || child.HasChild()

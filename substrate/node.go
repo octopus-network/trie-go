@@ -1,5 +1,3 @@
-
-
 // Package node defines the `Node` structure with methods
 // to be used in the modified Merkle-Patricia Radix-16 trie.
 package node
@@ -29,8 +27,9 @@ type Node struct {
 	// Dirty is true when the branch differs
 	// from the node stored in the database.
 	Dirty bool
-	// MerkleValue is the cached Merkle value of the node.
-	MerkleValue []byte
+
+	// Node value is a cached Merkle value(hash value) or inlined value
+	NodeValue []byte
 
 	// Descendants is the number of descendant nodes for
 	// this particular node.
@@ -61,7 +60,7 @@ func (n Node) StringNode() (stringNode *gotree.Node) {
 	if n.Descendants > 0 { // must be a branch
 		stringNode.Appendf("Descendants: %d", n.Descendants)
 	}
-	stringNode.Appendf("Merkle value: " + bytesToString(n.MerkleValue))
+	stringNode.Appendf("Merkle value: " + bytesToString(n.NodeValue))
 
 	for i, child := range n.Children {
 		if child == nil {

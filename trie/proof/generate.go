@@ -6,9 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	// "github.com/octopus-network/trie-go/substrate/codec"
-	"github.com/octopus-network/trie-go/substrate/node"
-	// "github.com/octopus-network/trie-go/substrate/node/pools"
+	"github.com/octopus-network/trie-go/substrate"
 	"github.com/ChainSafe/gossamer/lib/common"
 	"github.com/octopus-network/trie-go/trie"
 )

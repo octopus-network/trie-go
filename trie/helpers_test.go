@@ -1,6 +1,3 @@
-// Copyright 2022 ChainSafe Systems (ON)
-// SPDX-License-Identifier: LGPL-3.0-only
-
 package trie
 
 import (
@@ -8,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/octopus-network/trie-go/substrate/node"
+	node "github.com/octopus-network/trie-go/substrate"
 	"github.com/stretchr/testify/require"
 )
 

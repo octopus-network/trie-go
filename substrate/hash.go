@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"hash"
 	"io"
-
 	// "github.com/octopus-network/trie-go/substrate/pools"
 )
 
@@ -53,8 +52,8 @@ func hashEncoding(encoding []byte, writer io.Writer) (err error) {
 
 // CalculateMerkleValue returns the Merkle value of the non-root node.
 func (n *Node) CalculateMerkleValue() (merkleValue []byte, err error) {
-	if !n.Dirty && n.MerkleValue != nil {
-		return n.MerkleValue, nil
+	if !n.Dirty && n.NodeValue != nil {
+		return n.NodeValue, nil
 	}
 
 	_, merkleValue, err = n.EncodeAndHash()
@@ -68,8 +67,8 @@ func (n *Node) CalculateMerkleValue() (merkleValue []byte, err error) {
 // CalculateRootMerkleValue returns the Merkle value of the root node.
 func (n *Node) CalculateRootMerkleValue() (merkleValue []byte, err error) {
 	const rootMerkleValueLength = 32
-	if !n.Dirty && len(n.MerkleValue) == rootMerkleValueLength {
-		return n.MerkleValue, nil
+	if !n.Dirty && len(n.NodeValue) == rootMerkleValueLength {
+		return n.NodeValue, nil
 	}
 
 	_, merkleValue, err = n.EncodeAndHashRoot()
@@ -101,7 +100,7 @@ func (n *Node) EncodeAndHash() (encoding, merkleValue []byte, err error) {
 		return nil, nil, fmt.Errorf("merkle value: %w", err)
 	}
 	merkleValue = merkleValueBuffer.Bytes()
-	n.MerkleValue = merkleValue // no need to copy
+	n.NodeValue = merkleValue // no need to copy
 
 	return encoding, merkleValue, nil
 }
@@ -127,7 +126,7 @@ func (n *Node) EncodeAndHashRoot() (encoding, merkleValue []byte, err error) {
 		return nil, nil, fmt.Errorf("merkle value: %w", err)
 	}
 	merkleValue = merkleValueBuffer.Bytes()
-	n.MerkleValue = merkleValue // no need to copy
+	n.NodeValue = merkleValue // no need to copy
 
 	return encoding, merkleValue, nil
 }

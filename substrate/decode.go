@@ -1,5 +1,3 @@
-
-
 package node
 
 import (
@@ -26,9 +24,10 @@ var (
 )
 
 const INLINE_LEN = 32
-		// childNode := &Node{
-		// 	MerkleValue: hash,
-		// }
+
+// childNode := &Node{
+// 	MerkleValue: hash,
+// }
 
 // Decode decodes a node from a reader.
 // The encoding format is documented in the README.md
@@ -98,29 +97,29 @@ func decodeBranch(reader io.Reader, variant byte, partialKeyLength uint16) (
 			continue
 		}
 
-		var hash []byte
-		err := sd.Decode(&hash)
+		var nodeValue []byte
+		err := sd.Decode(&nodeValue)
 		if err != nil {
 			return nil, fmt.Errorf("%w: at index %d: %s",
 				ErrDecodeChildHash, i, err)
 		}
 
-
-		inlineNode := &Node{
-			MerkleValue: hash,
+		childNode := &Node{
+			NodeValue: nodeValue,
 		}
+
 		// Handle inlined nodes
-		if len(hash) < INLINE_LEN {
-			reader = bytes.NewReader(hash)
-			inlineNode, err = Decode(reader)
+		if len(nodeValue) < INLINE_LEN {
+			reader = bytes.NewReader(nodeValue)
+			childNode, err = Decode(reader)
 			if err != nil {
 				return nil, fmt.Errorf("decoding inlined child at index %d: %w", i, err)
 			}
-			node.Descendants += inlineNode.Descendants
+			node.Descendants += childNode.Descendants
 		}
 
 		node.Descendants++
-		node.Children[i] = inlineNode
+		node.Children[i] = childNode
 	}
 
 	return node, nil

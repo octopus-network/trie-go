@@ -1,15 +1,11 @@
-// Copyright 2021 ChainSafe Systems (ON)
-// SPDX-License-Identifier: LGPL-3.0-only
-
 package trie
 
 import (
 	"bytes"
 	"fmt"
 
-	// "github.com/octopus-network/trie-go/substrate/codec"
-	"github.com/octopus-network/trie-go/substrate/node"
 	"github.com/ChainSafe/gossamer/lib/common"
+	node "github.com/octopus-network/trie-go/substrate"
 
 	"github.com/ChainSafe/chaindb"
 )
@@ -41,7 +37,7 @@ func (t *Trie) Load(db Database, rootHash common.Hash) error {
 	}
 
 	t.root = root
-	t.root.MerkleValue = rootHashBytes
+	t.root.NodeValue = rootHashBytes
 
 	return t.loadNode(db, t.root)
 }
@@ -57,7 +53,7 @@ func (t *Trie) loadNode(db Database, n *Node) error {
 			continue
 		}
 
-		merkleValue := child.MerkleValue
+		merkleValue := child.NodeValue
 
 		if len(merkleValue) == 0 {
 			// node has already been loaded inline
@@ -80,7 +76,7 @@ func (t *Trie) loadNode(db Database, n *Node) error {
 			return fmt.Errorf("decoding node with Merkle value 0x%x: %w", merkleValue, err)
 		}
 
-		decodedNode.MerkleValue = merkleValue
+		decodedNode.NodeValue = merkleValue
 		branch.Children[i] = decodedNode
 
 		err = t.loadNode(db, decodedNode)
@@ -129,17 +125,17 @@ func PopulateNodeHashes(n *Node, nodeHashes map[string]struct{}) {
 	}
 
 	switch {
-	case len(n.MerkleValue) == 0:
+	case len(n.NodeValue) == 0:
 		// TODO remove once lazy loading of nodes is implemented
 		// https://github.com/ChainSafe/gossamer/issues/2838
 		panic(fmt.Sprintf("node with partial key 0x%x has no Merkle value computed", n.PartialKey))
-	case len(n.MerkleValue) < 32:
+	case len(n.NodeValue) < 32:
 		// Inlined node where its Merkle value is its
 		// encoding and not the encoding hash digest.
 		return
 	}
 
-	nodeHashes[string(n.MerkleValue)] = struct{}{}
+	nodeHashes[string(n.NodeValue)] = struct{}{}
 
 	if n.Kind() == node.Leaf {
 		return
@@ -212,7 +208,7 @@ func getFromDBAtNode(db chaindb.Database, n *Node, key []byte) (
 	}
 
 	// Child can be either inlined or a hash pointer.
-	childMerkleValue := child.MerkleValue
+	childMerkleValue := child.NodeValue
 	if len(childMerkleValue) == 0 && child.Kind() == node.Leaf {
 		return getFromDBAtNode(db, child, key[commonPrefixLength+1:])
 	}
@@ -262,7 +258,7 @@ func (t *Trie) writeDirtyNode(db chaindb.Batch, n *Node) (err error) {
 	if err != nil {
 		return fmt.Errorf(
 			"encoding and hashing node with Merkle value 0x%x: %w",
-			n.MerkleValue, err)
+			n.NodeValue, err)
 	}
 
 	err = db.Put(merkleValue, encoding)
@@ -332,7 +328,7 @@ func (t *Trie) getInsertedNodeHashesAtNode(n *Node, merkleValues map[string]stru
 	if err != nil {
 		return fmt.Errorf(
 			"encoding and hashing node with Merkle value 0x%x: %w",
-			n.MerkleValue, err)
+			n.NodeValue, err)
 	}
 
 	merkleValues[string(merkleValue)] = struct{}{}

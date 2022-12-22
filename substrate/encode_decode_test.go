@@ -1,4 +1,3 @@
-
 package node
 
 import (
@@ -93,7 +92,7 @@ func Test_Branch_Encode_Decode(t *testing.T) {
 				PartialKey: []byte{5},
 				Children: padRightChildren([]*Node{
 					{
-						MerkleValue: []byte{
+						NodeValue: []byte{
 							2, 18, 48, 30, 98,
 							133, 244, 78, 70,
 							161, 196, 105, 228,

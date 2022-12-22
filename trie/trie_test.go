@@ -1,6 +1,3 @@
-// Copyright 2022 ChainSafe Systems (ON)
-// SPDX-License-Identifier: LGPL-3.0-only
-
 package trie
 
 import (
@@ -10,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/ChainSafe/gossamer/lib/common"
-	"github.com/octopus-network/trie-go/substrate/node"
+	node "github.com/octopus-network/trie-go/substrate"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -132,9 +129,9 @@ func Test_Trie_updateGeneration(t *testing.T) {
 		"trie generation higher and hash": {
 			trieGeneration: 2,
 			node: &Node{
-				Generation:  1,
-				PartialKey:  []byte{1},
-				MerkleValue: []byte{1, 2, 3},
+				Generation: 1,
+				PartialKey: []byte{1},
+				NodeValue:  []byte{1, 2, 3},
 			},
 			copySettings: node.DefaultCopySettings,
 			newNode: &Node{
@@ -353,7 +350,7 @@ func Test_Trie_Hash(t *testing.T) {
 				root: &Node{
 					PartialKey:   []byte{1, 2, 3},
 					StorageValue: []byte{1},
-					MerkleValue: []byte{
+					NodeValue: []byte{
 						0xa8, 0x13, 0x7c, 0xee, 0xb4, 0xad, 0xea, 0xac,
 						0x9e, 0x5b, 0x37, 0xe2, 0x8e, 0x7d, 0x64, 0x78,
 						0xac, 0xba, 0xb0, 0x6e, 0x90, 0x76, 0xe4, 0x67,
@@ -382,7 +379,7 @@ func Test_Trie_Hash(t *testing.T) {
 				root: &Node{
 					PartialKey:   []byte{1, 2, 3},
 					StorageValue: []byte("branch"),
-					MerkleValue: []byte{
+					NodeValue: []byte{
 						0xaa, 0x7e, 0x57, 0x48, 0xb0, 0x27, 0x4d, 0x18,
 						0xf5, 0x1c, 0xfd, 0x36, 0x4c, 0x4b, 0x56, 0x4a,
 						0xf5, 0x37, 0x9d, 0xd7, 0xcb, 0xf5, 0x80, 0x15,
@@ -393,7 +390,7 @@ func Test_Trie_Hash(t *testing.T) {
 						{
 							PartialKey:   []byte{9},
 							StorageValue: []byte{1},
-							MerkleValue:  []byte{0x41, 0x09, 0x04, 0x01},
+							NodeValue:    []byte{0x41, 0x09, 0x04, 0x01},
 						},
 					}),
 				},
@@ -3552,7 +3549,6 @@ func Test_Trie_deleteAtNode(t *testing.T) {
 	}
 }
 
-
 func Test_Trie_String(t *testing.T) {
 	t.Parallel()
 
@@ -3634,7 +3630,6 @@ func Test_Trie_String(t *testing.T) {
 		})
 	}
 }
-
 
 func Test_handleDeletion(t *testing.T) {
 	t.Parallel()

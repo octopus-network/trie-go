@@ -5,7 +5,8 @@ A generic implementation of the Base-16 Modified Merkle Tree ("Trie") data struc
 ## Substrate
 The substrate trie node implementation that refer to [the Polkadot specification](https://spec.polkadot.network/#sect-state-storage).  
 #### TODO:
-- Support substrate trie layout V1
+- Making trie more generic.
+- Support substrate trie layout V1.
 
 ## EIP1186
 #### TODO:
