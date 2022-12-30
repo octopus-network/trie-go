@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ChainSafe/gossamer/lib/common"
+	"github.com/octopus-network/trie-go/util"
 )
 
 // ChildStorageKeyPrefix is the prefix for all child storage keys
@@ -42,7 +42,7 @@ func (t *Trie) GetChild(keyToChild []byte) (*Trie, error) {
 		return nil, fmt.Errorf("%w at key 0x%x%x", ErrChildTrieDoesNotExist, ChildStorageKeyPrefix, keyToChild)
 	}
 
-	return t.childTries[common.BytesToHash(childHash)], nil
+	return t.childTries[util.BytesToHash(childHash)], nil
 }
 
 // PutIntoChild puts a key-value pair into the child trie located in the main trie at key :child_storage:[keyToChild]

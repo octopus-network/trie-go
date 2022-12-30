@@ -2,7 +2,7 @@
 // Source: github.com/ChainSafe/gossamer/internal/trie/node (interfaces: Buffer)
 
 // Package node is a generated GoMock package.
-package node
+package substrate
 
 import (
 	reflect "reflect"

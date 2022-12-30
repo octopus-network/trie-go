@@ -1,6 +1,6 @@
 // Package node defines the `Node` structure with methods
 // to be used in the modified Merkle-Patricia Radix-16 trie.
-package node
+package substrate
 
 import (
 	"fmt"

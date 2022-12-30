@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/ChainSafe/gossamer/lib/common"
-	node "github.com/octopus-network/trie-go/substrate"
+	"github.com/octopus-network/trie-go/util"
+	sub "github.com/octopus-network/trie-go/substrate"
 
 	"github.com/ChainSafe/chaindb"
 )
@@ -18,7 +18,7 @@ type Database interface {
 
 // Load reconstructs the trie from the database from the given root hash.
 // It is used when restarting the node to load the current state trie.
-func (t *Trie) Load(db Database, rootHash common.Hash) error {
+func (t *Trie) Load(db Database, rootHash util.Hash) error {
 	if rootHash == EmptyHash {
 		t.root = nil
 		return nil
@@ -31,7 +31,7 @@ func (t *Trie) Load(db Database, rootHash common.Hash) error {
 	}
 
 	reader := bytes.NewReader(encodedNode)
-	root, err := node.Decode(reader)
+	root, err := sub.Decode(reader)
 	if err != nil {
 		return fmt.Errorf("cannot decode root node: %w", err)
 	}
@@ -43,7 +43,7 @@ func (t *Trie) Load(db Database, rootHash common.Hash) error {
 }
 
 func (t *Trie) loadNode(db Database, n *Node) error {
-	if n.Kind() != node.Branch {
+	if n.Kind() != sub.Branch {
 		return nil
 	}
 
@@ -71,7 +71,7 @@ func (t *Trie) loadNode(db Database, n *Node) error {
 		}
 
 		reader := bytes.NewReader(encodedNode)
-		decodedNode, err := node.Decode(reader)
+		decodedNode, err := sub.Decode(reader)
 		if err != nil {
 			return fmt.Errorf("decoding node with Merkle value 0x%x: %w", merkleValue, err)
 		}
@@ -84,7 +84,7 @@ func (t *Trie) loadNode(db Database, n *Node) error {
 			return fmt.Errorf("loading child at index %d with Merkle value 0x%x: %w", i, merkleValue, err)
 		}
 
-		if decodedNode.Kind() == node.Branch {
+		if decodedNode.Kind() == sub.Branch {
 			// Note 1: the node is fully loaded with all its descendants
 			// count only after the database load above.
 			// Note 2: direct child node is already counted as descendant
@@ -99,7 +99,7 @@ func (t *Trie) loadNode(db Database, n *Node) error {
 	for _, key := range t.GetKeysWithPrefix(ChildStorageKeyPrefix) {
 		childTrie := NewEmptyTrie()
 		value := t.Get(key)
-		rootHash := common.BytesToHash(value)
+		rootHash := util.BytesToHash(value)
 		err := childTrie.Load(db, rootHash)
 		if err != nil {
 			return fmt.Errorf("failed to load child trie with root hash=%s: %w", rootHash, err)
@@ -137,7 +137,7 @@ func PopulateNodeHashes(n *Node, nodeHashes map[string]struct{}) {
 
 	nodeHashes[string(n.NodeValue)] = struct{}{}
 
-	if n.Kind() == node.Leaf {
+	if n.Kind() == sub.Leaf {
 		return
 	}
 
@@ -151,13 +151,13 @@ func PopulateNodeHashes(n *Node, nodeHashes map[string]struct{}) {
 // It recursively descends into the trie using the database starting
 // from the root node until it reaches the node with the given key.
 // It then reads the value from the database.
-func GetFromDB(db chaindb.Database, rootHash common.Hash, key []byte) (
+func GetFromDB(db chaindb.Database, rootHash util.Hash, key []byte) (
 	value []byte, err error) {
 	if rootHash == EmptyHash {
 		return nil, nil
 	}
 
-	k := node.KeyLEToNibbles(key)
+	k := sub.KeyLEToNibbles(key)
 
 	encodedRootNode, err := db.Get(rootHash[:])
 	if err != nil {
@@ -165,7 +165,7 @@ func GetFromDB(db chaindb.Database, rootHash common.Hash, key []byte) (
 	}
 
 	reader := bytes.NewReader(encodedRootNode)
-	rootNode, err := node.Decode(reader)
+	rootNode, err := sub.Decode(reader)
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode root node: %w", err)
 	}
@@ -179,7 +179,7 @@ func GetFromDB(db chaindb.Database, rootHash common.Hash, key []byte) (
 // slice will modify the value of the node in the trie.
 func getFromDBAtNode(db chaindb.Database, n *Node, key []byte) (
 	value []byte, err error) {
-	if n.Kind() == node.Leaf {
+	if n.Kind() == sub.Leaf {
 		if bytes.Equal(n.PartialKey, key) {
 			return n.StorageValue, nil
 		}
@@ -209,7 +209,7 @@ func getFromDBAtNode(db chaindb.Database, n *Node, key []byte) (
 
 	// Child can be either inlined or a hash pointer.
 	childMerkleValue := child.NodeValue
-	if len(childMerkleValue) == 0 && child.Kind() == node.Leaf {
+	if len(childMerkleValue) == 0 && child.Kind() == sub.Leaf {
 		return getFromDBAtNode(db, child, key[commonPrefixLength+1:])
 	}
 
@@ -221,7 +221,7 @@ func getFromDBAtNode(db chaindb.Database, n *Node, key []byte) (
 	}
 
 	reader := bytes.NewReader(encodedChild)
-	decodedChild, err := node.Decode(reader)
+	decodedChild, err := sub.Decode(reader)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"decoding child node with Merkle value 0x%x: %w",
@@ -268,7 +268,7 @@ func (t *Trie) writeDirtyNode(db chaindb.Batch, n *Node) (err error) {
 			merkleValue, err)
 	}
 
-	if n.Kind() != node.Branch {
+	if n.Kind() != sub.Branch {
 		n.SetClean()
 		return nil
 	}
@@ -333,7 +333,7 @@ func (t *Trie) getInsertedNodeHashesAtNode(n *Node, merkleValues map[string]stru
 
 	merkleValues[string(merkleValue)] = struct{}{}
 
-	if n.Kind() != node.Branch {
+	if n.Kind() != sub.Branch {
 		return nil
 	}
 

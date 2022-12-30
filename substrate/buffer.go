@@ -1,5 +1,5 @@
 
-package node
+package substrate
 
 import "io"
 

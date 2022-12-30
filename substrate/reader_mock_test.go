@@ -1,5 +1,5 @@
 // Package node is a generated GoMock package.
-package node
+package substrate
 
 import (
 	reflect "reflect"

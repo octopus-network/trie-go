@@ -1,5 +1,4 @@
-
-package node
+package substrate
 
 import (
 	"bytes"
@@ -7,7 +6,7 @@ import (
 	"io"
 	"runtime"
 
-	"github.com/ChainSafe/gossamer/pkg/scale"
+	"github.com/octopus-network/trie-go/scale"
 )
 
 type encodingAsyncResult struct {

@@ -1,5 +1,5 @@
 
-package node
+package substrate
 
 // NibblesToKeyLE converts a slice of nibbles with length k into a
 // Little Endian byte slice.

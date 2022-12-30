@@ -1,5 +1,4 @@
-
-package node
+package substrate
 
 import "fmt"
 

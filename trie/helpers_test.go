@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	node "github.com/octopus-network/trie-go/substrate"
+	sub "github.com/octopus-network/trie-go/substrate"
 	"github.com/stretchr/testify/require"
 )
 
@@ -111,7 +111,7 @@ func pickKeys(keyValues map[string][]byte,
 }
 
 func padRightChildren(slice []*Node) (paddedSlice []*Node) {
-	paddedSlice = make([]*Node, node.ChildrenCapacity)
+	paddedSlice = make([]*Node, sub.ChildrenCapacity)
 	copy(paddedSlice, slice)
 	return paddedSlice
 }

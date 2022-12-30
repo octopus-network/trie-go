@@ -1,5 +1,4 @@
-
-package node
+package substrate
 
 type variant struct {
 	bits byte

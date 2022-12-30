@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ChainSafe/gossamer/lib/common"
-	node "github.com/octopus-network/trie-go/substrate"
+	sub "github.com/octopus-network/trie-go/substrate"
 	"github.com/octopus-network/trie-go/trie"
+	"github.com/octopus-network/trie-go/util"
 )
 
 var (
@@ -57,15 +57,15 @@ func BuildTrie(encodedProofNodes [][]byte, rootHash []byte) (t *trie.Trie, err e
 	// note we can use a buffer from the pool since
 	// the calculated root hash digest is not used after
 	// the function completes.
-	buffer := node.DigestBuffers.Get().(*bytes.Buffer)
-	defer node.DigestBuffers.Put(buffer)
+	buffer := sub.DigestBuffers.Get().(*bytes.Buffer)
+	defer sub.DigestBuffers.Put(buffer)
 
 	// This loop does two things:
 	// 1. It finds the root node by comparing it with the root hash and decodes it.
 	// 2. It stores other encoded nodes in a mapping from their encoding digest to
 	//    their encoding. They are only decoded later if the root or one of its
 	//    descendant nodes reference their hash digest.
-	var root *node.Node
+	var root *sub.Node
 	for _, encodedProofNode := range encodedProofNodes {
 		// Note all encoded proof nodes are one of the following:
 		// - trie root node
@@ -75,7 +75,7 @@ func BuildTrie(encodedProofNodes [][]byte, rootHash []byte) (t *trie.Trie, err e
 		// so we use MerkleValueRoot to force hashing the node in case
 		// it is a root node smaller or equal to 32 bytes.
 		buffer.Reset()
-		err = node.MerkleValueRoot(encodedProofNode, buffer)
+		err = sub.MerkleValueRoot(encodedProofNode, buffer)
 		if err != nil {
 			return nil, fmt.Errorf("calculating Merkle value: %w", err)
 		}
@@ -88,7 +88,7 @@ func BuildTrie(encodedProofNodes [][]byte, rootHash []byte) (t *trie.Trie, err e
 			// Note: no need to add the root node to the map of hash to encoding
 		}
 
-		root, err = node.Decode(bytes.NewReader(encodedProofNode))
+		root, err = sub.Decode(bytes.NewReader(encodedProofNode))
 		if err != nil {
 			return nil, fmt.Errorf("decoding root node: %w", err)
 		}
@@ -101,7 +101,7 @@ func BuildTrie(encodedProofNodes [][]byte, rootHash []byte) (t *trie.Trie, err e
 	if root == nil {
 		proofHashDigests := make([]string, 0, len(digestToEncoding))
 		for hashDigestString := range digestToEncoding {
-			hashDigestHex := common.BytesToHex([]byte(hashDigestString))
+			hashDigestHex := util.BytesToHex([]byte(hashDigestString))
 			proofHashDigests = append(proofHashDigests, hashDigestHex)
 		}
 		return nil, fmt.Errorf("%w: for root hash 0x%x in proof hash digests %s",
@@ -118,8 +118,8 @@ func BuildTrie(encodedProofNodes [][]byte, rootHash []byte) (t *trie.Trie, err e
 
 // LoadProof is a recursive function that will create all the trie paths based
 // on the map from node hash digest to node encoding, starting from the node `n`.
-func LoadProof(digestToEncoding map[string][]byte, n *node.Node) (err error) {
-	if n.Kind() != node.Branch {
+func LoadProof(digestToEncoding map[string][]byte, n *sub.Node) (err error) {
+	if n.Kind() != sub.Branch {
 		return nil
 	}
 
@@ -151,7 +151,7 @@ func LoadProof(digestToEncoding map[string][]byte, n *node.Node) (err error) {
 			continue
 		}
 
-		child, err := node.Decode(bytes.NewReader(encoding))
+		child, err := sub.Decode(bytes.NewReader(encoding))
 		if err != nil {
 			return fmt.Errorf("decoding child node for hash digest 0x%x: %w",
 				merkleValue, err)

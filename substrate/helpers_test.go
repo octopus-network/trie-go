@@ -1,5 +1,5 @@
 
-package node
+package substrate
 
 func padRightChildren(slice []*Node) (paddedSlice []*Node) {
 	paddedSlice = make([]*Node, ChildrenCapacity)

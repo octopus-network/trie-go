@@ -1,11 +1,11 @@
-package node
+package substrate
 
 import (
 	"bytes"
 	"io"
 	"testing"
 
-	"github.com/ChainSafe/gossamer/pkg/scale"
+	"github.com/octopus-network/trie-go/scale"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

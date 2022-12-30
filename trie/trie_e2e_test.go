@@ -9,11 +9,10 @@ import (
 	"testing"
 
 	"github.com/ChainSafe/chaindb"
-	node "github.com/octopus-network/trie-go/substrate"
+	sub "github.com/octopus-network/trie-go/substrate"
+	"github.com/octopus-network/trie-go/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ChainSafe/gossamer/lib/common"
 )
 
 const (
@@ -121,7 +120,7 @@ func Test_Trie_PutAndGet_Multiple(t *testing.T) {
 		// Check value is inserted correctly.
 		retrievedValue := trie.Get(key)
 		require.Equalf(t, retrievedValue, value,
-			"for key (nibbles) 0x%x", node.KeyLEToNibbles(key))
+			"for key (nibbles) 0x%x", sub.KeyLEToNibbles(key))
 	}
 
 	// Check values were not mismoved in the trie.
@@ -129,7 +128,7 @@ func Test_Trie_PutAndGet_Multiple(t *testing.T) {
 		key := []byte(keyString)
 		retrievedValue := trie.Get(key)
 		require.Equalf(t, retrievedValue, value,
-			"for key (nibbles) 0x%x", node.KeyLEToNibbles(key))
+			"for key (nibbles) 0x%x", sub.KeyLEToNibbles(key))
 	}
 }
 
@@ -323,7 +322,7 @@ func TestTrieDiff(t *testing.T) {
 	}
 
 	dbTrie := NewEmptyTrie()
-	err = dbTrie.Load(storageDB, common.BytesToHash(newTrie.root.NodeValue))
+	err = dbTrie.Load(storageDB, util.BytesToHash(newTrie.root.NodeValue))
 	require.NoError(t, err)
 }
 
@@ -442,7 +441,7 @@ func TestClearPrefix(t *testing.T) {
 		require.Equal(t, dcTrieHash, ssTrieHash)
 
 		ssTrie.ClearPrefix(prefix)
-		prefixNibbles := node.KeyLEToNibbles(prefix)
+		prefixNibbles := sub.KeyLEToNibbles(prefix)
 		if len(prefixNibbles) > 0 && prefixNibbles[len(prefixNibbles)-1] == 0 {
 			prefixNibbles = prefixNibbles[:len(prefixNibbles)-1]
 		}
@@ -450,7 +449,7 @@ func TestClearPrefix(t *testing.T) {
 		for _, test := range tests {
 			res := ssTrie.Get(test.key)
 
-			keyNibbles := node.KeyLEToNibbles(test.key)
+			keyNibbles := sub.KeyLEToNibbles(test.key)
 			length := lenCommonPrefix(keyNibbles, prefixNibbles)
 			if length == len(prefixNibbles) {
 				require.Nil(t, res)
@@ -510,7 +509,7 @@ func TestClearPrefix_Small(t *testing.T) {
 	ssTrie.ClearPrefix([]byte("noo"))
 
 	expectedRoot := &Node{
-		PartialKey:   node.KeyLEToNibbles([]byte("other")),
+		PartialKey:   sub.KeyLEToNibbles([]byte("other")),
 		StorageValue: []byte("other"),
 		Generation:   1,
 		Dirty:        true,
@@ -822,7 +821,7 @@ func TestTrie_ClearPrefixLimit(t *testing.T) {
 	}
 
 	testFn := func(t *testing.T, testCase []keyValues, prefix []byte) {
-		prefixNibbles := node.KeyLEToNibbles(prefix)
+		prefixNibbles := sub.KeyLEToNibbles(prefix)
 		if len(prefixNibbles) > 0 && prefixNibbles[len(prefixNibbles)-1] == 0 {
 			prefixNibbles = prefixNibbles[:len(prefixNibbles)-1]
 		}
@@ -841,7 +840,7 @@ func TestTrie_ClearPrefixLimit(t *testing.T) {
 			for _, test := range testCase {
 				val := trieClearPrefix.Get(test.key)
 
-				keyNibbles := node.KeyLEToNibbles(test.key)
+				keyNibbles := sub.KeyLEToNibbles(test.key)
 				length := lenCommonPrefix(keyNibbles, prefixNibbles)
 
 				if length == len(prefixNibbles) {
@@ -927,7 +926,7 @@ func TestTrie_ClearPrefixLimitSnapshot(t *testing.T) {
 
 	for _, testCase := range cases {
 		for _, prefix := range prefixes {
-			prefixNibbles := node.KeyLEToNibbles(prefix)
+			prefixNibbles := sub.KeyLEToNibbles(prefix)
 			if len(prefixNibbles) > 0 && prefixNibbles[len(prefixNibbles)-1] == 0 {
 				prefixNibbles = prefixNibbles[:len(prefixNibbles)-1]
 			}
@@ -965,7 +964,7 @@ func TestTrie_ClearPrefixLimitSnapshot(t *testing.T) {
 				for _, test := range testCase {
 					val := ssTrie.Get(test.key)
 
-					keyNibbles := node.KeyLEToNibbles(test.key)
+					keyNibbles := sub.KeyLEToNibbles(test.key)
 					length := lenCommonPrefix(keyNibbles, prefixNibbles)
 
 					if length == len(prefixNibbles) {

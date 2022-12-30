@@ -1,12 +1,10 @@
-
-package node
+package substrate
 
 import (
 	"fmt"
 
-	// "github.com/octopus-network/trie-go/substrate/codec"
-	"github.com/ChainSafe/gossamer/lib/common"
-	"github.com/ChainSafe/gossamer/pkg/scale"
+	"github.com/octopus-network/trie-go/util"
+	"github.com/octopus-network/trie-go/scale"
 )
 
 // Encode encodes the node to the buffer given.
@@ -28,7 +26,7 @@ func (n *Node) Encode(buffer Buffer) (err error) {
 	kind := n.Kind()
 	nodeIsBranch := kind == Branch
 	if nodeIsBranch {
-		childrenBitmap := common.Uint16ToBytes(n.ChildrenBitmap())
+		childrenBitmap := util.Uint16ToBytes(n.ChildrenBitmap())
 		_, err = buffer.Write(childrenBitmap)
 		if err != nil {
 			return fmt.Errorf("cannot write children bitmap to buffer: %w", err)

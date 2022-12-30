@@ -1,4 +1,4 @@
-package node
+package substrate
 
 // SetDirty sets the dirty status to true for the node.
 func (n *Node) SetDirty() {

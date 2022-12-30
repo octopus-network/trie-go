@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ChainSafe/gossamer/lib/common"
-	node "github.com/octopus-network/trie-go/substrate"
+	"github.com/octopus-network/trie-go/util"
+	sub "github.com/octopus-network/trie-go/substrate"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,7 +15,7 @@ import (
 func Test_EmptyHash(t *testing.T) {
 	t.Parallel()
 
-	expected := common.Hash{
+	expected := util.Hash{
 		0x3, 0x17, 0xa, 0x2e, 0x75, 0x97, 0xb7, 0xb7,
 		0xe3, 0xd8, 0x4c, 0x5, 0x39, 0x1d, 0x13, 0x9a,
 		0x62, 0xb1, 0x57, 0xe7, 0x87, 0x86, 0xd8, 0xc0,
@@ -26,7 +26,7 @@ func Test_EmptyHash(t *testing.T) {
 
 func Test_NewEmptyTrie(t *testing.T) {
 	expectedTrie := &Trie{
-		childTries:          make(map[common.Hash]*Trie),
+		childTries:          make(map[util.Hash]*Trie),
 		deletedMerkleValues: map[string]struct{}{},
 	}
 	trie := NewEmptyTrie()
@@ -43,7 +43,7 @@ func Test_NewTrie(t *testing.T) {
 			PartialKey:   []byte{0},
 			StorageValue: []byte{17},
 		},
-		childTries:          make(map[common.Hash]*Trie),
+		childTries:          make(map[util.Hash]*Trie),
 		deletedMerkleValues: map[string]struct{}{},
 	}
 	trie := NewTrie(root)
@@ -56,7 +56,7 @@ func Test_Trie_Snapshot(t *testing.T) {
 	trie := &Trie{
 		generation: 8,
 		root:       &Node{PartialKey: []byte{8}, StorageValue: []byte{1}},
-		childTries: map[common.Hash]*Trie{
+		childTries: map[util.Hash]*Trie{
 			{1}: {
 				generation: 1,
 				root:       &Node{PartialKey: []byte{1}, StorageValue: []byte{1}},
@@ -81,7 +81,7 @@ func Test_Trie_Snapshot(t *testing.T) {
 	expectedTrie := &Trie{
 		generation: 9,
 		root:       &Node{PartialKey: []byte{8}, StorageValue: []byte{1}},
-		childTries: map[common.Hash]*Trie{
+		childTries: map[util.Hash]*Trie{
 			{1}: {
 				generation:          2,
 				root:                &Node{PartialKey: []byte{1}, StorageValue: []byte{1}},
@@ -107,7 +107,7 @@ func Test_Trie_updateGeneration(t *testing.T) {
 	testCases := map[string]struct {
 		trieGeneration              uint64
 		node                        *Node
-		copySettings                node.CopySettings
+		copySettings                sub.CopySettings
 		newNode                     *Node
 		copied                      bool
 		expectedDeletedMerkleValues map[string]struct{}
@@ -118,7 +118,7 @@ func Test_Trie_updateGeneration(t *testing.T) {
 				Generation: 1,
 				PartialKey: []byte{1},
 			},
-			copySettings: node.DefaultCopySettings,
+			copySettings: sub.DefaultCopySettings,
 			newNode: &Node{
 				Generation: 2,
 				PartialKey: []byte{1},
@@ -133,7 +133,7 @@ func Test_Trie_updateGeneration(t *testing.T) {
 				PartialKey: []byte{1},
 				NodeValue:  []byte{1, 2, 3},
 			},
-			copySettings: node.DefaultCopySettings,
+			copySettings: sub.DefaultCopySettings,
 			newNode: &Node{
 				Generation: 2,
 				PartialKey: []byte{1},
@@ -229,7 +229,7 @@ func Test_Trie_DeepCopy(t *testing.T) {
 			trieOriginal: &Trie{
 				generation: 1,
 				root:       &Node{PartialKey: []byte{1, 2}, StorageValue: []byte{1}},
-				childTries: map[common.Hash]*Trie{
+				childTries: map[util.Hash]*Trie{
 					{1, 2, 3}: {
 						generation: 2,
 						root:       &Node{PartialKey: []byte{1}, StorageValue: []byte{1}},
@@ -247,7 +247,7 @@ func Test_Trie_DeepCopy(t *testing.T) {
 			trieCopy: &Trie{
 				generation: 1,
 				root:       &Node{PartialKey: []byte{1, 2}, StorageValue: []byte{1}},
-				childTries: map[common.Hash]*Trie{
+				childTries: map[util.Hash]*Trie{
 					{1, 2, 3}: {
 						generation: 2,
 						root:       &Node{PartialKey: []byte{1}, StorageValue: []byte{1}},
@@ -308,7 +308,7 @@ func Test_Trie_MustHash(t *testing.T) {
 
 		hash := trie.MustHash()
 
-		expectedHash := common.Hash{
+		expectedHash := util.Hash{
 			0x3, 0x17, 0xa, 0x2e, 0x75, 0x97, 0xb7, 0xb7,
 			0xe3, 0xd8, 0x4c, 0x5, 0x39, 0x1d, 0x13, 0x9a,
 			0x62, 0xb1, 0x57, 0xe7, 0x87, 0x86, 0xd8, 0xc0,
@@ -322,13 +322,13 @@ func Test_Trie_Hash(t *testing.T) {
 
 	testCases := map[string]struct {
 		trie         Trie
-		hash         common.Hash
+		hash         util.Hash
 		errWrapped   error
 		errMessage   string
 		expectedTrie Trie
 	}{
 		"nil root": {
-			hash: common.Hash{
+			hash: util.Hash{
 				0x3, 0x17, 0xa, 0x2e, 0x75, 0x97, 0xb7, 0xb7,
 				0xe3, 0xd8, 0x4c, 0x5, 0x39, 0x1d, 0x13, 0x9a,
 				0x62, 0xb1, 0x57, 0xe7, 0x87, 0x86, 0xd8, 0xc0,
@@ -341,7 +341,7 @@ func Test_Trie_Hash(t *testing.T) {
 					StorageValue: []byte{1},
 				},
 			},
-			hash: common.Hash{
+			hash: util.Hash{
 				0xa8, 0x13, 0x7c, 0xee, 0xb4, 0xad, 0xea, 0xac,
 				0x9e, 0x5b, 0x37, 0xe2, 0x8e, 0x7d, 0x64, 0x78,
 				0xac, 0xba, 0xb0, 0x6e, 0x90, 0x76, 0xe4, 0x67,
@@ -370,7 +370,7 @@ func Test_Trie_Hash(t *testing.T) {
 					}),
 				},
 			},
-			hash: common.Hash{
+			hash: util.Hash{
 				0xaa, 0x7e, 0x57, 0x48, 0xb0, 0x27, 0x4d, 0x18,
 				0xf5, 0x1c, 0xfd, 0x36, 0x4c, 0x4b, 0x56, 0x4a,
 				0xf5, 0x37, 0x9d, 0xd7, 0xcb, 0xf5, 0x80, 0x15,
@@ -540,7 +540,7 @@ func Test_Trie_Entries(t *testing.T) {
 
 		trie := Trie{
 			root:       nil,
-			childTries: make(map[common.Hash]*Trie),
+			childTries: make(map[util.Hash]*Trie),
 		}
 
 		kv := map[string][]byte{
@@ -1481,14 +1481,14 @@ func Test_LoadFromMap(t *testing.T) {
 	}{
 		"nil data": {
 			expectedTrie: Trie{
-				childTries:          map[common.Hash]*Trie{},
+				childTries:          map[util.Hash]*Trie{},
 				deletedMerkleValues: map[string]struct{}{},
 			},
 		},
 		"empty data": {
 			data: map[string]string{},
 			expectedTrie: Trie{
-				childTries:          map[common.Hash]*Trie{},
+				childTries:          map[util.Hash]*Trie{},
 				deletedMerkleValues: map[string]struct{}{},
 			},
 		},
@@ -1521,7 +1521,7 @@ func Test_LoadFromMap(t *testing.T) {
 					},
 					Dirty: true,
 				},
-				childTries:          map[common.Hash]*Trie{},
+				childTries:          map[util.Hash]*Trie{},
 				deletedMerkleValues: map[string]struct{}{},
 			},
 		},
@@ -1551,7 +1551,7 @@ func Test_LoadFromMap(t *testing.T) {
 						},
 					}),
 				},
-				childTries:          map[common.Hash]*Trie{},
+				childTries:          map[util.Hash]*Trie{},
 				deletedMerkleValues: map[string]struct{}{},
 			},
 		},
@@ -1994,7 +1994,7 @@ func Test_retrieve(t *testing.T) {
 			t.Parallel()
 
 			// Check no mutation was done
-			copySettings := node.DeepCopySettings
+			copySettings := sub.DeepCopySettings
 			var expectedParent *Node
 			if testCase.parent != nil {
 				expectedParent = testCase.parent.Copy(copySettings)

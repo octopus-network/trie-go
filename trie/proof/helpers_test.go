@@ -5,19 +5,19 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/ChainSafe/gossamer/lib/common"
-	"github.com/ChainSafe/gossamer/pkg/scale"
-	node "github.com/octopus-network/trie-go/substrate"
+	"github.com/octopus-network/trie-go/util"
+	"github.com/octopus-network/trie-go/scale"
+	sub "github.com/octopus-network/trie-go/substrate"
 	"github.com/stretchr/testify/require"
 )
 
-func padRightChildren(slice []*node.Node) (paddedSlice []*node.Node) {
-	paddedSlice = make([]*node.Node, node.ChildrenCapacity)
+func padRightChildren(slice []*sub.Node) (paddedSlice []*sub.Node) {
+	paddedSlice = make([]*sub.Node, sub.ChildrenCapacity)
 	copy(paddedSlice, slice)
 	return paddedSlice
 }
 
-func encodeNode(t *testing.T, node node.Node) (encoded []byte) {
+func encodeNode(t *testing.T, node sub.Node) (encoded []byte) {
 	t.Helper()
 	buffer := bytes.NewBuffer(nil)
 	err := node.Encode(buffer)
@@ -25,7 +25,7 @@ func encodeNode(t *testing.T, node node.Node) (encoded []byte) {
 	return buffer.Bytes()
 }
 
-func blake2bNode(t *testing.T, node node.Node) (digest []byte) {
+func blake2bNode(t *testing.T, node sub.Node) (digest []byte) {
 	t.Helper()
 	encoding := encodeNode(t, node)
 	return blake2b(t, encoding)
@@ -40,7 +40,7 @@ func scaleEncode(t *testing.T, data []byte) (encoded []byte) {
 
 func blake2b(t *testing.T, data []byte) (digest []byte) {
 	t.Helper()
-	digestHash, err := common.Blake2bHash(data)
+	digestHash, err := util.Blake2bHash(data)
 	require.NoError(t, err)
 	digest = digestHash[:]
 	return digest
@@ -80,18 +80,18 @@ func Test_getBadNodeEncoding(t *testing.T) {
 	t.Parallel()
 
 	badEncoding := getBadNodeEncoding()
-	_, err := node.Decode(bytes.NewBuffer(badEncoding))
+	_, err := sub.Decode(bytes.NewBuffer(badEncoding))
 	require.Error(t, err)
 }
 
-func assertLongEncoding(t *testing.T, node node.Node) {
+func assertLongEncoding(t *testing.T, node sub.Node) {
 	t.Helper()
 
 	encoding := encodeNode(t, node)
 	require.Greater(t, len(encoding), 32)
 }
 
-func assertShortEncoding(t *testing.T, node node.Node) {
+func assertShortEncoding(t *testing.T, node sub.Node) {
 	t.Helper()
 
 	encoding := encodeNode(t, node)

@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/octopus-network/trie-go/substrate"
-	"github.com/ChainSafe/gossamer/lib/common"
+	sub "github.com/octopus-network/trie-go/substrate"
+	"github.com/octopus-network/trie-go/util"
 	"github.com/octopus-network/trie-go/trie"
 )
 
@@ -28,17 +28,17 @@ type Database interface {
 func Generate(rootHash []byte, fullKeys [][]byte, database Database) (
 	encodedProofNodes [][]byte, err error) {
 	trie := trie.NewEmptyTrie()
-	if err := trie.Load(database, common.BytesToHash(rootHash)); err != nil {
+	if err := trie.Load(database, util.BytesToHash(rootHash)); err != nil {
 		return nil, fmt.Errorf("loading trie: %w", err)
 	}
 	rootNode := trie.RootNode()
 
-	buffer := node.DigestBuffers.Get().(*bytes.Buffer)
-	defer node.DigestBuffers.Put(buffer)
+	buffer := sub.DigestBuffers.Get().(*bytes.Buffer)
+	defer sub.DigestBuffers.Put(buffer)
 
 	merkleValuesSeen := make(map[string]struct{})
 	for _, fullKey := range fullKeys {
-		fullKeyNibbles := node.KeyLEToNibbles(fullKey)
+		fullKeyNibbles := sub.KeyLEToNibbles(fullKey)
 		newEncodedProofNodes, err := walkRoot(rootNode, fullKeyNibbles)
 		if err != nil {
 			// Note we wrap the full key context here since walk is recursive and
@@ -48,7 +48,7 @@ func Generate(rootHash []byte, fullKeys [][]byte, database Database) (
 
 		for _, encodedProofNode := range newEncodedProofNodes {
 			buffer.Reset()
-			err := node.MerkleValue(encodedProofNode, buffer)
+			err := sub.MerkleValue(encodedProofNode, buffer)
 			if err != nil {
 				return nil, fmt.Errorf("blake2b hash: %w", err)
 			}
@@ -67,7 +67,7 @@ func Generate(rootHash []byte, fullKeys [][]byte, database Database) (
 	return encodedProofNodes, nil
 }
 
-func walkRoot(root *node.Node, fullKey []byte) (
+func walkRoot(root *sub.Node, fullKey []byte) (
 	encodedProofNodes [][]byte, err error) {
 	if root == nil {
 		if len(fullKey) == 0 {
@@ -90,7 +90,7 @@ func walkRoot(root *node.Node, fullKey []byte) (
 		return encodedProofNodes, nil
 	}
 
-	if root.Kind() == node.Leaf && !nodeFound {
+	if root.Kind() == sub.Leaf && !nodeFound {
 		return nil, ErrKeyNotFound
 	}
 
@@ -112,7 +112,7 @@ func walkRoot(root *node.Node, fullKey []byte) (
 	return encodedProofNodes, nil
 }
 
-func walk(parent *node.Node, fullKey []byte) (
+func walk(parent *sub.Node, fullKey []byte) (
 	encodedProofNodes [][]byte, err error) {
 	if parent == nil {
 		if len(fullKey) == 0 {
@@ -142,7 +142,7 @@ func walk(parent *node.Node, fullKey []byte) (
 		return encodedProofNodes, nil
 	}
 
-	if parent.Kind() == node.Leaf && !nodeFound {
+	if parent.Kind() == sub.Leaf && !nodeFound {
 		return nil, ErrKeyNotFound
 	}
 

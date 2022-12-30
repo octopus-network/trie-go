@@ -1,4 +1,4 @@
-package node
+package substrate
 
 var (
 	// DefaultCopySettings contains the following copy settings:

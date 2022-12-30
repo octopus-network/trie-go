@@ -1,5 +1,5 @@
 
-package node
+package substrate
 
 const (
 	// ChildrenCapacity is the maximum number of children in a branch node.

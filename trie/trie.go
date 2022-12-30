@@ -4,18 +4,18 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/ChainSafe/gossamer/lib/common"
-	node "github.com/octopus-network/trie-go/substrate"
+	"github.com/octopus-network/trie-go/util"
+	sub "github.com/octopus-network/trie-go/substrate"
 )
 
 // EmptyHash is the empty trie hash.
-var EmptyHash = common.MustBlake2bHash([]byte{0})
+var EmptyHash = util.MustBlake2bHash([]byte{0})
 
 // Trie is a base 16 modified Merkle Patricia trie.
 type Trie struct {
 	generation uint64
 	root       *Node
-	childTries map[common.Hash]*Trie
+	childTries map[util.Hash]*Trie
 	// deletedMerkleValues are the node Merkle values that were deleted
 	// from this trie since the last snapshot. These are used by the online
 	// pruner to detect with database keys (trie node Merkle values) can
@@ -32,7 +32,7 @@ func NewEmptyTrie() *Trie {
 func NewTrie(root *Node) *Trie {
 	return &Trie{
 		root:                root,
-		childTries:          make(map[common.Hash]*Trie),
+		childTries:          make(map[util.Hash]*Trie),
 		generation:          0, // Initially zero but increases after every snapshot.
 		deletedMerkleValues: make(map[string]struct{}),
 	}
@@ -44,8 +44,8 @@ func NewTrie(root *Node) *Trie {
 // It does a snapshot of all child tries as well, and resets
 // the set of deleted hashes.
 func (t *Trie) Snapshot() (newTrie *Trie) {
-	childTries := make(map[common.Hash]*Trie, len(t.childTries))
-	rootCopySettings := node.DefaultCopySettings
+	childTries := make(map[util.Hash]*Trie, len(t.childTries))
+	rootCopySettings := sub.DefaultCopySettings
 	rootCopySettings.CopyCached = true
 	for rootHash, childTrie := range t.childTries {
 		childTries[rootHash] = &Trie{
@@ -76,7 +76,7 @@ func (t *Trie) handleTrackedDeltas(success bool, pendingDeletedMerkleValues map[
 }
 
 func (t *Trie) prepLeafForMutation(currentLeaf *Node,
-	copySettings node.CopySettings,
+	copySettings sub.CopySettings,
 	pendingDeletedMerkleValues map[string]struct{}) (newLeaf *Node) {
 	if currentLeaf.Generation == t.generation {
 		// no need to deep copy and update generation
@@ -90,7 +90,7 @@ func (t *Trie) prepLeafForMutation(currentLeaf *Node,
 }
 
 func (t *Trie) prepBranchForMutation(currentBranch *Node,
-	copySettings node.CopySettings,
+	copySettings sub.CopySettings,
 	pendingDeletedMerkleValues map[string]struct{}) (newBranch *Node) {
 	if currentBranch.Generation == t.generation {
 		// no need to deep copy and update generation
@@ -107,7 +107,7 @@ func (t *Trie) prepBranchForMutation(currentBranch *Node,
 // an older trie generation (snapshot) so we deep copy the
 // node and update the generation on the newer copy.
 func updateGeneration(currentNode *Node, trieGeneration uint64,
-	deletedMerkleValues map[string]struct{}, copySettings node.CopySettings) (
+	deletedMerkleValues map[string]struct{}, copySettings sub.CopySettings) (
 	newNode *Node) {
 	newNode = currentNode.Copy(copySettings)
 	newNode.Generation = trieGeneration
@@ -145,14 +145,14 @@ func (t *Trie) DeepCopy() (trieCopy *Trie) {
 	}
 
 	if t.childTries != nil {
-		trieCopy.childTries = make(map[common.Hash]*Trie, len(t.childTries))
+		trieCopy.childTries = make(map[util.Hash]*Trie, len(t.childTries))
 		for hash, trie := range t.childTries {
 			trieCopy.childTries[hash] = trie.DeepCopy()
 		}
 	}
 
 	if t.root != nil {
-		copySettings := node.DeepCopySettings
+		copySettings := sub.DeepCopySettings
 		trieCopy.root = t.root.Copy(copySettings)
 	}
 
@@ -161,14 +161,14 @@ func (t *Trie) DeepCopy() (trieCopy *Trie) {
 
 // RootNode returns a copy of the root node of the trie.
 func (t *Trie) RootNode() *Node {
-	copySettings := node.DefaultCopySettings
+	copySettings := sub.DefaultCopySettings
 	copySettings.CopyCached = true
 	return t.root.Copy(copySettings)
 }
 
 // MustHash returns the hashed root of the trie.
 // It panics if it fails to hash the root node.
-func (t *Trie) MustHash() common.Hash {
+func (t *Trie) MustHash() util.Hash {
 	h, err := t.Hash()
 	if err != nil {
 		panic(err)
@@ -178,7 +178,7 @@ func (t *Trie) MustHash() common.Hash {
 }
 
 // Hash returns the hashed root of the trie.
-func (t *Trie) Hash() (rootHash common.Hash, err error) {
+func (t *Trie) Hash() (rootHash util.Hash, err error) {
 	if t.root == nil {
 		return EmptyHash, nil
 	}
@@ -211,10 +211,10 @@ func entries(parent *Node, prefix []byte, kv map[string][]byte) map[string][]byt
 		return kv
 	}
 
-	if parent.Kind() == node.Leaf {
+	if parent.Kind() == sub.Leaf {
 		parentKey := parent.PartialKey
 		fullKeyNibbles := concatenateSlices(prefix, parentKey)
-		keyLE := string(node.NibblesToKeyLE(fullKeyNibbles))
+		keyLE := string(sub.NibblesToKeyLE(fullKeyNibbles))
 		kv[keyLE] = parent.StorageValue
 		return kv
 	}
@@ -222,7 +222,7 @@ func entries(parent *Node, prefix []byte, kv map[string][]byte) map[string][]byt
 	branch := parent
 	if branch.StorageValue != nil {
 		fullKeyNibbles := concatenateSlices(prefix, branch.PartialKey)
-		keyLE := string(node.NibblesToKeyLE(fullKeyNibbles))
+		keyLE := string(sub.NibblesToKeyLE(fullKeyNibbles))
 		kv[keyLE] = branch.StorageValue
 	}
 
@@ -238,14 +238,14 @@ func entries(parent *Node, prefix []byte, kv map[string][]byte) map[string][]byt
 // It returns nil if no next key is found.
 func (t *Trie) NextKey(keyLE []byte) (nextKeyLE []byte) {
 	prefix := []byte(nil)
-	key := node.KeyLEToNibbles(keyLE)
+	key := sub.KeyLEToNibbles(keyLE)
 
 	nextKey := findNextKey(t.root, prefix, key)
 	if nextKey == nil {
 		return nil
 	}
 
-	nextKeyLE = node.NibblesToKeyLE(nextKey)
+	nextKeyLE = sub.NibblesToKeyLE(nextKey)
 	return nextKeyLE
 }
 
@@ -254,7 +254,7 @@ func findNextKey(parent *Node, prefix, searchKey []byte) (nextKey []byte) {
 		return nil
 	}
 
-	if parent.Kind() == node.Leaf {
+	if parent.Kind() == sub.Leaf {
 		return findNextKeyLeaf(parent, prefix, searchKey)
 	}
 	return findNextKeyBranch(parent, prefix, searchKey)
@@ -309,7 +309,7 @@ func keyIsLexicographicallyBigger(key, key2 []byte) (bigger bool) {
 // given and returns a next key or nil if no next key is found.
 func findNextKeyChild(children []*Node, startIndex byte,
 	fullKey, key []byte) (nextKey []byte) {
-	for i := startIndex; i < node.ChildrenCapacity; i++ {
+	for i := startIndex; i < sub.ChildrenCapacity; i++ {
 		child := children[i]
 		if child == nil {
 			continue
@@ -337,7 +337,7 @@ func (t *Trie) Put(keyLE, value []byte) {
 }
 
 func (t *Trie) insertKeyLE(keyLE, value []byte, deletedMerkleValues map[string]struct{}) {
-	nibblesKey := node.KeyLEToNibbles(keyLE)
+	nibblesKey := sub.KeyLEToNibbles(keyLE)
 	if value == nil {
 		// Force nil value to be inserted to []byte{} since `nil` means there
 		// is no value.
@@ -364,7 +364,7 @@ func (t *Trie) insert(parent *Node, key, value []byte,
 
 	// TODO ensure all values have dirty set to true
 
-	if parent.Kind() == node.Branch {
+	if parent.Kind() == sub.Branch {
 		return t.insertInBranch(parent, key, value, deletedMerkleValues)
 	}
 	return t.insertInLeaf(parent, key, value, deletedMerkleValues)
@@ -380,7 +380,7 @@ func (t *Trie) insertInLeaf(parentLeaf *Node, key, value []byte,
 			return parentLeaf, mutated, nodesCreated
 		}
 
-		copySettings := node.DefaultCopySettings
+		copySettings := sub.DefaultCopySettings
 		copySettings.CopyStorageValue = false
 		parentLeaf = t.prepLeafForMutation(parentLeaf, copySettings, deletedMerkleValues)
 		parentLeaf.StorageValue = value
@@ -395,7 +395,7 @@ func (t *Trie) insertInLeaf(parentLeaf *Node, key, value []byte,
 	newBranchParent := &Node{
 		PartialKey: key[:commonPrefixLength],
 		Generation: t.generation,
-		Children:   make([]*node.Node, node.ChildrenCapacity),
+		Children:   make([]*sub.Node, sub.ChildrenCapacity),
 		Dirty:      true,
 	}
 	parentLeafKey := parentLeaf.PartialKey
@@ -406,7 +406,7 @@ func (t *Trie) insertInLeaf(parentLeaf *Node, key, value []byte,
 
 		if len(key) < len(parentLeafKey) {
 			// Move the current leaf parent as a child to the new branch.
-			copySettings := node.DefaultCopySettings
+			copySettings := sub.DefaultCopySettings
 			childIndex := parentLeafKey[commonPrefixLength]
 			newParentLeafKey := parentLeaf.PartialKey[commonPrefixLength+1:]
 			if !bytes.Equal(parentLeaf.PartialKey, newParentLeafKey) {
@@ -426,7 +426,7 @@ func (t *Trie) insertInLeaf(parentLeaf *Node, key, value []byte,
 		newBranchParent.StorageValue = parentLeaf.StorageValue
 	} else {
 		// make the leaf a child of the new branch
-		copySettings := node.DefaultCopySettings
+		copySettings := sub.DefaultCopySettings
 		childIndex := parentLeafKey[commonPrefixLength]
 		newParentLeafKey := parentLeaf.PartialKey[commonPrefixLength+1:]
 		if !bytes.Equal(parentLeaf.PartialKey, newParentLeafKey) {
@@ -453,7 +453,7 @@ func (t *Trie) insertInLeaf(parentLeaf *Node, key, value []byte,
 func (t *Trie) insertInBranch(parentBranch *Node, key, value []byte,
 	deletedMerkleValues map[string]struct{}) (
 	newParent *Node, mutated bool, nodesCreated uint32) {
-	copySettings := node.DefaultCopySettings
+	copySettings := sub.DefaultCopySettings
 
 	if bytes.Equal(key, parentBranch.PartialKey) {
 		if parentBranch.StorageValueEqual(value) {
@@ -507,7 +507,7 @@ func (t *Trie) insertInBranch(parentBranch *Node, key, value []byte,
 	newParentBranch := &Node{
 		PartialKey: key[:commonPrefixLength],
 		Generation: t.generation,
-		Children:   make([]*node.Node, node.ChildrenCapacity),
+		Children:   make([]*sub.Node, sub.ChildrenCapacity),
 		Dirty:      true,
 	}
 
@@ -547,12 +547,12 @@ func LoadFromMap(data map[string]string) (trie Trie, err error) {
 	}()
 
 	for key, value := range data {
-		keyLEBytes, err := common.HexToBytes(key)
+		keyLEBytes, err := util.HexToBytes(key)
 		if err != nil {
 			return Trie{}, fmt.Errorf("cannot convert key hex to bytes: %w", err)
 		}
 
-		valueBytes, err := common.HexToBytes(value)
+		valueBytes, err := util.HexToBytes(value)
 		if err != nil {
 			return Trie{}, fmt.Errorf("cannot convert value hex to bytes: %w", err)
 		}
@@ -569,7 +569,7 @@ func LoadFromMap(data map[string]string) (trie Trie, err error) {
 func (t *Trie) GetKeysWithPrefix(prefixLE []byte) (keysLE [][]byte) {
 	var prefixNibbles []byte
 	if len(prefixLE) > 0 {
-		prefixNibbles = node.KeyLEToNibbles(prefixLE)
+		prefixNibbles = sub.KeyLEToNibbles(prefixLE)
 		prefixNibbles = bytes.TrimSuffix(prefixNibbles, []byte{0})
 	}
 
@@ -588,7 +588,7 @@ func getKeysWithPrefix(parent *Node, prefix, key []byte,
 		return keysLE
 	}
 
-	if parent.Kind() == node.Leaf {
+	if parent.Kind() == sub.Leaf {
 		return getKeysWithPrefixFromLeaf(parent, prefix, key, keysLE)
 	}
 
@@ -634,7 +634,7 @@ func addAllKeys(parent *Node, prefix []byte, keysLE [][]byte) (newKeysLE [][]byt
 		return keysLE
 	}
 
-	if parent.Kind() == node.Leaf {
+	if parent.Kind() == sub.Leaf {
 		keyLE := makeFullKeyLE(prefix, parent.PartialKey)
 		keysLE = append(keysLE, keyLE)
 		return keysLE
@@ -655,7 +655,7 @@ func addAllKeys(parent *Node, prefix []byte, keysLE [][]byte) (newKeysLE [][]byt
 
 func makeFullKeyLE(prefix, nodeKey []byte) (fullKeyLE []byte) {
 	fullKey := concatenateSlices(prefix, nodeKey)
-	fullKeyLE = node.NibblesToKeyLE(fullKey)
+	fullKeyLE = sub.NibblesToKeyLE(fullKey)
 	return fullKeyLE
 }
 
@@ -669,7 +669,7 @@ func makeChildPrefix(branchPrefix, branchKey []byte,
 // which matches its key with the key given.
 // Note the key argument is given in little Endian format.
 func (t *Trie) Get(keyLE []byte) (value []byte) {
-	keyNibbles := node.KeyLEToNibbles(keyLE)
+	keyNibbles := sub.KeyLEToNibbles(keyLE)
 	return retrieve(t.root, keyNibbles)
 }
 
@@ -678,7 +678,7 @@ func retrieve(parent *Node, key []byte) (value []byte) {
 		return nil
 	}
 
-	if parent.Kind() == node.Leaf {
+	if parent.Kind() == sub.Leaf {
 		return retrieveFromLeaf(parent, key)
 	}
 	return retrieveFromBranch(parent, key)
@@ -722,7 +722,7 @@ func (t *Trie) ClearPrefixLimit(prefixLE []byte, limit uint32) (deleted uint32, 
 		return 0, false
 	}
 
-	prefix := node.KeyLEToNibbles(prefixLE)
+	prefix := sub.KeyLEToNibbles(prefixLE)
 	prefix = bytes.TrimSuffix(prefix, []byte{0})
 
 	t.root, deleted, _, allDeleted = t.clearPrefixLimitAtNode(
@@ -740,7 +740,7 @@ func (t *Trie) clearPrefixLimitAtNode(parent *Node, prefix []byte,
 		return nil, 0, 0, true
 	}
 
-	if parent.Kind() == node.Leaf {
+	if parent.Kind() == sub.Leaf {
 		// if prefix is not found, it's also all deleted.
 		// TODO check this is the same behaviour as in substrate
 		const allDeleted = true
@@ -790,7 +790,7 @@ func (t *Trie) clearPrefixLimitBranch(branch *Node, prefix []byte, limit uint32,
 		return branch, valuesDeleted, nodesRemoved, allDeleted
 	}
 
-	copySettings := node.DefaultCopySettings
+	copySettings := sub.DefaultCopySettings
 	branch = t.prepBranchForMutation(branch, copySettings, deletedMerkleValues)
 	branch.Children[childIndex] = child
 	branch.Descendants -= nodesRemoved
@@ -824,7 +824,7 @@ func (t *Trie) clearPrefixLimitChild(branch *Node, prefix []byte, limit uint32,
 		return branch, valuesDeleted, nodesRemoved, allDeleted
 	}
 
-	copySettings := node.DefaultCopySettings
+	copySettings := sub.DefaultCopySettings
 	branch = t.prepBranchForMutation(branch, copySettings, deletedMerkleValues)
 	branch.Children[childIndex] = child
 	branch.Descendants -= nodesRemoved
@@ -851,14 +851,14 @@ func (t *Trie) deleteNodesLimit(parent *Node, limit uint32,
 		return nil, valuesDeleted, nodesRemoved
 	}
 
-	if parent.Kind() == node.Leaf {
+	if parent.Kind() == sub.Leaf {
 		valuesDeleted, nodesRemoved = 1, 1
 		return nil, valuesDeleted, nodesRemoved
 	}
 
 	branch := parent
 
-	nilChildren := node.ChildrenCapacity - branch.NumChildren()
+	nilChildren := sub.ChildrenCapacity - branch.NumChildren()
 
 	var newDeleted, newNodesRemoved uint32
 	var branchChildMerged bool
@@ -867,7 +867,7 @@ func (t *Trie) deleteNodesLimit(parent *Node, limit uint32,
 			continue
 		}
 
-		copySettings := node.DefaultCopySettings
+		copySettings := sub.DefaultCopySettings
 		branch = t.prepBranchForMutation(branch, copySettings, deletedMerkleValues)
 
 		branch.Children[i], newDeleted, newNodesRemoved = t.deleteNodesLimit(
@@ -888,7 +888,7 @@ func (t *Trie) deleteNodesLimit(parent *Node, limit uint32,
 			nodesRemoved++
 		}
 
-		if nilChildren == node.ChildrenCapacity &&
+		if nilChildren == sub.ChildrenCapacity &&
 			branch.StorageValue == nil {
 			return nil, valuesDeleted, nodesRemoved
 		}
@@ -920,7 +920,7 @@ func (t *Trie) ClearPrefix(prefixLE []byte) {
 		return
 	}
 
-	prefix := node.KeyLEToNibbles(prefixLE)
+	prefix := sub.KeyLEToNibbles(prefixLE)
 	prefix = bytes.TrimSuffix(prefix, []byte{0})
 
 	t.root, _ = t.clearPrefixAtNode(t.root, prefix, pendingDeletedMerkleValues)
@@ -939,7 +939,7 @@ func (t *Trie) clearPrefixAtNode(parent *Node, prefix []byte,
 		return nil, nodesRemoved
 	}
 
-	if parent.Kind() == node.Leaf {
+	if parent.Kind() == sub.Leaf {
 		const nodesRemoved = 0
 		return parent, nodesRemoved
 	}
@@ -957,7 +957,7 @@ func (t *Trie) clearPrefixAtNode(parent *Node, prefix []byte,
 		}
 
 		nodesRemoved = 1 + child.Descendants
-		copySettings := node.DefaultCopySettings
+		copySettings := sub.DefaultCopySettings
 		branch = t.prepBranchForMutation(branch, copySettings, deletedMerkleValues)
 		branch.Children[childIndex] = nil
 		branch.Descendants -= nodesRemoved
@@ -985,7 +985,7 @@ func (t *Trie) clearPrefixAtNode(parent *Node, prefix []byte,
 		return parent, nodesRemoved
 	}
 
-	copySettings := node.DefaultCopySettings
+	copySettings := sub.DefaultCopySettings
 	branch = t.prepBranchForMutation(branch, copySettings, deletedMerkleValues)
 	branch.Descendants -= nodesRemoved
 	branch.Children[childIndex] = child
@@ -1007,7 +1007,7 @@ func (t *Trie) Delete(keyLE []byte) {
 		t.handleTrackedDeltas(success, pendingDeletedMerkleValues)
 	}()
 
-	key := node.KeyLEToNibbles(keyLE)
+	key := sub.KeyLEToNibbles(keyLE)
 	t.root, _, _ = t.deleteAtNode(t.root, key, pendingDeletedMerkleValues)
 }
 
@@ -1019,7 +1019,7 @@ func (t *Trie) deleteAtNode(parent *Node, key []byte,
 		return nil, false, nodesRemoved
 	}
 
-	if parent.Kind() == node.Leaf {
+	if parent.Kind() == sub.Leaf {
 		if deleteLeaf(parent, key) == nil {
 			const nodesRemoved = 1
 			return nil, true, nodesRemoved
@@ -1041,7 +1041,7 @@ func (t *Trie) deleteBranch(branch *Node, key []byte,
 	deletedMerkleValues map[string]struct{}) (
 	newParent *Node, deleted bool, nodesRemoved uint32) {
 	if len(key) == 0 || bytes.Equal(branch.PartialKey, key) {
-		copySettings := node.DefaultCopySettings
+		copySettings := sub.DefaultCopySettings
 		copySettings.CopyStorageValue = false
 		branch = t.prepBranchForMutation(branch, copySettings, deletedMerkleValues)
 		// we need to set to nil if the branch has the same generation
@@ -1071,7 +1071,7 @@ func (t *Trie) deleteBranch(branch *Node, key []byte,
 		return branch, false, nodesRemoved
 	}
 
-	copySettings := node.DefaultCopySettings
+	copySettings := sub.DefaultCopySettings
 	branch = t.prepBranchForMutation(branch, copySettings, deletedMerkleValues)
 	branch.Descendants -= nodesRemoved
 	branch.Children[childIndex] = newChild
@@ -1121,7 +1121,7 @@ func handleDeletion(branch *Node, key []byte) (newNode *Node, branchChildMerged 
 		childIndex := firstChildIndex
 		child := branch.Children[firstChildIndex]
 
-		if child.Kind() == node.Leaf {
+		if child.Kind() == sub.Leaf {
 			newLeafKey := concatenateSlices(branch.PartialKey, intToByteSlice(childIndex), child.PartialKey)
 			return &Node{
 				PartialKey:   newLeafKey,
@@ -1137,7 +1137,7 @@ func handleDeletion(branch *Node, key []byte) (newNode *Node, branchChildMerged 
 			PartialKey:   newBranchKey,
 			StorageValue: childBranch.StorageValue,
 			Generation:   branch.Generation,
-			Children:     make([]*node.Node, node.ChildrenCapacity),
+			Children:     make([]*sub.Node, sub.ChildrenCapacity),
 			Dirty:        true,
 			// this is the descendants of the original branch minus one
 			Descendants: childBranch.Descendants,

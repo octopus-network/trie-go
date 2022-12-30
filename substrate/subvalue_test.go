@@ -1,6 +1,6 @@
 
 
-package node
+package substrate
 
 import (
 	"testing"
