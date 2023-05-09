@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/octopus-network/trie-go/util"
 	sub "github.com/octopus-network/trie-go/substrate"
+	"github.com/octopus-network/trie-go/util"
 )
 
 // EmptyHash is the empty trie hash.

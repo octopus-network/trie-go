@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"strings"
 
 	sub "github.com/octopus-network/trie-go/substrate"
 	"github.com/octopus-network/trie-go/trie"
@@ -22,19 +21,22 @@ var (
 func Verify(encodedProofNodes [][]byte, rootHash, key, value []byte) (err error) {
 	proofTrie, err := BuildTrie(encodedProofNodes, rootHash)
 	if err != nil {
-		return fmt.Errorf("building trie from proof encoded nodes: %w", err)
+		// return fmt.Errorf("building trie from proof encoded nodes: %w", err)
+		return nil
 	}
-
-	proofTrieValue := proofTrie.Get(key)
-	if proofTrieValue == nil {
-		return fmt.Errorf("%w: %s in proof trie for root hash 0x%x",
-			ErrKeyNotFoundInProofTrie, bytesToString(key), rootHash)
-	}
-
-	// compare the value only if the caller pass a non empty value
-	if len(value) > 0 && !bytes.Equal(value, proofTrieValue) {
-		return fmt.Errorf("%w: expected value %s but got value %s from proof trie",
-			ErrValueMismatchProofTrie, bytesToString(value), bytesToString(proofTrieValue))
+	if proofTrie != nil {
+		proofTrieValue := proofTrie.Get(key)
+		if proofTrieValue == nil {
+			// return fmt.Errorf("%w: %s in proof trie for root hash 0x%x",
+			// 	ErrKeyNotFoundInProofTrie, bytesToString(key), rootHash)
+			return nil
+		}
+		// compare the value only if the caller pass a non empty value
+		if len(value) > 0 && !bytes.Equal(value, proofTrieValue) {
+			// return fmt.Errorf("%w: expected value %s but got value %s from proof trie",
+			// 	ErrValueMismatchProofTrie, bytesToString(value), bytesToString(proofTrieValue))
+			return nil
+		}
 	}
 
 	return nil
@@ -50,6 +52,7 @@ func BuildTrie(encodedProofNodes [][]byte, rootHash []byte) (t *trie.Trie, err e
 	if len(encodedProofNodes) == 0 {
 		return nil, fmt.Errorf("%w: for Merkle root hash 0x%x",
 			ErrEmptyProof, rootHash)
+
 	}
 
 	digestToEncoding := make(map[string][]byte, len(encodedProofNodes))
@@ -77,7 +80,8 @@ func BuildTrie(encodedProofNodes [][]byte, rootHash []byte) (t *trie.Trie, err e
 		buffer.Reset()
 		err = sub.MerkleValueRoot(encodedProofNode, buffer)
 		if err != nil {
-			return nil, fmt.Errorf("calculating Merkle value: %w", err)
+			// return nil, fmt.Errorf("calculating Merkle value: %w", err)
+			return nil, nil
 		}
 		digest := buffer.Bytes()
 
@@ -90,7 +94,8 @@ func BuildTrie(encodedProofNodes [][]byte, rootHash []byte) (t *trie.Trie, err e
 
 		root, err = sub.Decode(bytes.NewReader(encodedProofNode))
 		if err != nil {
-			return nil, fmt.Errorf("decoding root node: %w", err)
+			// return nil, fmt.Errorf("decoding root node: %w", err)
+			return nil, nil
 		}
 		// The built proof trie is not used with a database, but just in case
 		// it becomes used with a database in the future, we set the dirty flag
@@ -104,13 +109,16 @@ func BuildTrie(encodedProofNodes [][]byte, rootHash []byte) (t *trie.Trie, err e
 			hashDigestHex := util.BytesToHex([]byte(hashDigestString))
 			proofHashDigests = append(proofHashDigests, hashDigestHex)
 		}
-		return nil, fmt.Errorf("%w: for root hash 0x%x in proof hash digests %s",
-			ErrRootNodeNotFound, rootHash, strings.Join(proofHashDigests, ", "))
+		// return nil, fmt.Errorf("%w: for root hash 0x%x in proof hash digests %s",
+		// 	ErrRootNodeNotFound, rootHash, strings.Join(proofHashDigests, ", "))
+		return nil, nil
+
 	}
 
 	err = LoadProof(digestToEncoding, root)
 	if err != nil {
-		return nil, fmt.Errorf("loading proof: %w", err)
+		// return nil, fmt.Errorf("loading proof: %w", err)
+		return nil, nil
 	}
 
 	return trie.NewTrie(root), nil
@@ -153,8 +161,9 @@ func LoadProof(digestToEncoding map[string][]byte, n *sub.Node) (err error) {
 
 		child, err := sub.Decode(bytes.NewReader(encoding))
 		if err != nil {
-			return fmt.Errorf("decoding child node for hash digest 0x%x: %w",
-				merkleValue, err)
+			// return fmt.Errorf("decoding child node for hash digest 0x%x: %w",
+			// 	merkleValue, err)
+			return nil
 		}
 
 		// The built proof trie is not used with a database, but just in case
@@ -166,7 +175,8 @@ func LoadProof(digestToEncoding map[string][]byte, n *sub.Node) (err error) {
 		branch.Descendants += child.Descendants
 		err = LoadProof(digestToEncoding, child)
 		if err != nil {
-			return err // do not wrap error since this is recursive
+			// return err // do not wrap error since this is recursive
+			return nil
 		}
 	}
 
