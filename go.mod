@@ -40,4 +40,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// replace github.com/ChainSafe/gossamer => github.com/ChainSafe/gossamer v0.7.0
